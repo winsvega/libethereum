@@ -122,10 +122,17 @@ void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 u256 EthashClient::externalHashrate() const
 {
 	u256 ret = 0;
-	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
-		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
-			i = m_externalRates.erase(i);
-		else
-			ret += i++->second.first;
+	if (m_externalRates.size())
+	{
+		for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
+			if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
+				i = m_externalRates.erase(i);
+			else
+			{
+				i++;
+				if (i != m_externalRates.end())
+					ret += i->second.first;
+			}
+	}
 	return ret;
 }
