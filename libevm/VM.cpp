@@ -26,18 +26,21 @@ using namespace dev;
 using namespace dev::eth;
 
 
-// checked for too much gas or memory or failed conversion
 template<class T> static rmword to_rmword(T v)
 {
-	rmword w = rmword(v); 
-	if (w > 0x7FFFFFFFFFFFFFFF || w != v)
+	// check for overflow
+	if (v > 0x7FFFFFFFFFFFFFFF)
 		throwVMException(OutOfGas());
+	rmword w = rmword(v); 
 	return w;
 }
 
 
 uint64_t VM::verifyJumpDest(u256 const& _dest)
 {
+	// check for overflow
+	if (_dest > 0x7FFFFFFFFFFFFFFF)
+		throwVMException(BadJumpDestination());
 	uint64_t pc = uint64_t(_dest);
 	if (!m_jumpDests.count(pc))
 		throwVMException(BadJumpDestination());
@@ -90,18 +93,13 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	// closures for tracing, checking, metering, measuring ...
 	//
 	
-#if 1
 	uint64_t nSteps = 0;
 	auto onOperation = [&]()
 	{
 		if (_onOp)
 			_onOp(++nSteps, PC, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
 	};
-#else
-	auto onOperation = [&]()
-	{
-	};
-#endif
+
 	m_onFail = std::function<void()>(onOperation);
 	
 	auto checkStack = [&](unsigned _n, unsigned _d)
@@ -121,7 +119,6 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		}
 	};
 
-
 	auto gasForMem = [&](uoword _size) -> uoword
 	{
 		uoword s = _size / 32;
@@ -137,7 +134,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	auto resetGas = [&]() {
 		if (newTempSize > m_mem.size())
 			runGas += to_rmword(gasForMem(newTempSize) - gasForMem(m_mem.size())) ;
-		runGas += to_rmword(m_schedule->copyGas * ((copySize + 31) / 32));
+		runGas += (m_schedule->copyGas * ((copySize + 31) / 32));
 		if (io_gas < runGas)
 			throwVMException(OutOfGas());
 	};
@@ -251,7 +248,6 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	{
 		inst = (Instruction)_ext.getCode(PC);	
 		metric = c_metrics[static_cast<size_t>(inst)];
-//cerr << "VM::execImpl PC=" << PC << ": " << instructionInfo(inst).name << endl;
 		
 		checkStack(metric.args, metric.ret);
 		
