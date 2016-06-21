@@ -405,7 +405,6 @@ double static const c_targetDuration = 1;
 void Client::syncBlockQueue()
 {
 //	cdebug << "syncBlockQueue()";
-
 	ImportRoute ir;
 	unsigned count;
 	Timer t;
@@ -693,6 +692,9 @@ void Client::doWork(bool _doWait)
 
 	tick();
 
+	if (!isSealed)
+		rejigSealing();
+
 	callQueuedFunctions();
 
 	if (!m_syncBlockQueue && !m_syncTransactionQueue && _doWait)
@@ -713,7 +715,6 @@ void Client::tick()
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
 	}
-	rejigSealing();
 }
 
 void Client::checkWatchGarbage()
