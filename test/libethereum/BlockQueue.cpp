@@ -34,6 +34,7 @@ BOOST_FIXTURE_TEST_SUITE(BlockQueueSuite, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {
+	g_logVerbosity = 16;
 	TestBlock genesisBlock = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain blockchain(genesisBlock);
 	TestBlockChain blockchain2(genesisBlock);
