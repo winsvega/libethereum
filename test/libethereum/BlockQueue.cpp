@@ -34,6 +34,8 @@ BOOST_FIXTURE_TEST_SUITE(BlockQueueSuite, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {
+	for (int i=0; i< 50; i++)
+	{
 	g_logVerbosity = 16;
 	TestBlock genesisBlock = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain blockchain(genesisBlock);
@@ -99,6 +101,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block3b.updateNonce(blockchain2);
 	res = blockQueue.import(&block3b.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::UnknownParent, "Simple block import to BlockQueue should have return UnknownParent");
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
